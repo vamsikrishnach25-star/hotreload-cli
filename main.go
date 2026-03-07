@@ -1,13 +1,13 @@
 package main
-
 import (
 	"flag"
 	"fmt"
 	"log"
 
+	"hotreload/internal/builder"
+	"hotreload/internal/runner"
 	"hotreload/internal/watcher"
 )
-
 func main() {
 
 	root := flag.String("root", ".", "project root directory")
@@ -30,12 +30,36 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	proc := &runner.Process{}
+	err = builder.RunBuild(*buildCmd)
+if err != nil {
+	log.Fatal("Initial build failed")
+}
+
+err = proc.Start(*execCmd)
+if err != nil {
+	log.Fatal("Failed to start server")
+}
 
 	for {
 		select {
 
 		case event := <-w.Watcher.Events:
-			log.Println("File changed:", event.Name)
+
+			log.Println("File change detected:", event.Name)
+
+			proc.Stop()
+
+			err := builder.RunBuild(*buildCmd)
+			if err != nil {
+				log.Println("Build failed, not restarting server")
+				continue
+			}
+
+			err = proc.Start(*execCmd)
+			if err != nil {
+				log.Println("Failed to start server:", err)
+			}
 
 		case err := <-w.Watcher.Errors:
 			log.Println("Watcher error:", err)
