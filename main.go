@@ -3,6 +3,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"time"
 
 	"hotreload/internal/builder"
 	"hotreload/internal/runner"
@@ -40,26 +41,36 @@ err = proc.Start(*execCmd)
 if err != nil {
 	log.Fatal("Failed to start server")
 }
+debounceDelay := 500 * time.Millisecond
+var debounceTimer *time.Timer
 
 	for {
 		select {
 
 		case event := <-w.Watcher.Events:
 
-			log.Println("File change detected:", event.Name)
+	if debounceTimer != nil {
+		debounceTimer.Stop()
+	}
 
-			proc.Stop()
+	debounceTimer = time.AfterFunc(debounceDelay, func() {
 
-			err := builder.RunBuild(*buildCmd)
-			if err != nil {
-				log.Println("Build failed, not restarting server")
-				continue
-			}
+		log.Println("Debounced file change:", event.Name)
 
-			err = proc.Start(*execCmd)
-			if err != nil {
-				log.Println("Failed to start server:", err)
-			}
+		proc.Stop()
+
+		err := builder.RunBuild(*buildCmd)
+		if err != nil {
+			log.Println("Build failed, not restarting server")
+			return
+		}
+
+		err = proc.Start(*execCmd)
+		if err != nil {
+			log.Println("Failed to start server:", err)
+		}
+
+	})
 
 		case err := <-w.Watcher.Errors:
 			log.Println("Watcher error:", err)
