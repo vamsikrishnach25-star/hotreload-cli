@@ -13,7 +13,6 @@ type Watcher struct {
 }
 
 func NewWatcher() (*Watcher, error) {
-
 	w, err := fsnotify.NewWatcher()
 	if err != nil {
 		return nil, err
@@ -41,4 +40,19 @@ func (w *Watcher) WatchDir(root string) error {
 	})
 
 	return err
+}
+
+func (w *Watcher) Start() {
+
+	for {
+		select {
+
+		case event := <-w.Watcher.Events:
+			log.Println("File changed:", event.Name)
+
+		case err := <-w.Watcher.Errors:
+			log.Println("Watcher error:", err)
+
+		}
+	}
 }
