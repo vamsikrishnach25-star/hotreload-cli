@@ -1,0 +1,11 @@
+# Binaries
+*.exe
+*.exe~
+
+# Build folders
+bin/
+build/
+
+# Temporary files
+*.log
+*.tmp
