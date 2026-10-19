@@ -1,5 +1,4 @@
 package debounce
-
 import (
 	"sync"
 	"time"
@@ -16,7 +15,6 @@ func NewDebouncer(delay time.Duration) *Debouncer {
 		delay: delay,
 	}
 }
-
 func (d *Debouncer) Trigger(fn func()) {
 	d.mu.Lock()
 	defer d.mu.Unlock()

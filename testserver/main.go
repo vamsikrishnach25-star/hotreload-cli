@@ -9,7 +9,7 @@ func main() {
 		fmt.Fprintf(w, "Server Running!")
 	})
 
-	fmt.Println("Server restarted successfully!!!")
+	fmt.Println("Hot reload working!!!Success!!!")
 
 	http.ListenAndServe(":8080", nil)
 }

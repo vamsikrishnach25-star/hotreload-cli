@@ -1,5 +1,4 @@
 package watcher
-
 import (
 	"log"
 	"os"
@@ -7,7 +6,6 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 )
-
 type Watcher struct {
 	Watcher *fsnotify.Watcher
 }
@@ -22,6 +20,24 @@ func NewWatcher() (*Watcher, error) {
 		Watcher: w,
 	}, nil
 }
+func shouldIgnore(path string) bool {
+
+	ignoreDirs := []string{
+		".git",
+		"node_modules",
+		"bin",
+		"build",
+		"tmp",
+	}
+
+	for _, dir := range ignoreDirs {
+		if filepath.Base(path) == dir {
+			return true
+		}
+	}
+
+	return false
+}
 
 func (w *Watcher) WatchDir(root string) error {
 
@@ -32,6 +48,12 @@ func (w *Watcher) WatchDir(root string) error {
 		}
 
 		if info.IsDir() {
+
+		if shouldIgnore(path) {
+			log.Println("Ignoring:", path)
+			return filepath.SkipDir
+			}
+
 			log.Println("Watching:", path)
 			return w.Watcher.Add(path)
 		}
